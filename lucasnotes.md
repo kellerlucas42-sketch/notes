@@ -1,9 +1,5 @@
 # General Hardening & Remediation Guide
 
-**Environment:** VyOS gateway (`bedrock`) · Ubuntu 18.04 (`iron`) · Windows Server 2016 (`lapis`) · Rocky 9.6 + Splunk (`redstone`)
-
->  **Golden rule:** Never change scored account credentials without filing a PCR at `scoring.byuccdc.org`, and never alter a service's expected behavior/content just to "beat" the check — that's a disqualifying offense. Harden the *real* service; don't fake it.
-
 ---
 
 ## Table of Contents
