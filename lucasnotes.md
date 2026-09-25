@@ -1,12 +1,12 @@
-# 🛡️ CCDC Hardening & Remediation Guide
+# General Hardening & Remediation Guide
 
 **Environment:** VyOS gateway (`bedrock`) · Ubuntu 18.04 (`iron`) · Windows Server 2016 (`lapis`) · Rocky 9.6 + Splunk (`redstone`)
 
-> ⚠️ **Golden rule:** Never change scored account credentials without filing a PCR at `scoring.byuccdc.org`, and never alter a service's expected behavior/content just to "beat" the check — that's a disqualifying offense. Harden the *real* service; don't fake it.
+>  **Golden rule:** Never change scored account credentials without filing a PCR at `scoring.byuccdc.org`, and never alter a service's expected behavior/content just to "beat" the check — that's a disqualifying offense. Harden the *real* service; don't fake it.
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 1. [First 30 Minutes](#-first-30-minutes-on-every-box)
 2. [General Linux Hardening](#-general-linux-hardening)
@@ -20,7 +20,7 @@
 
 ---
 
-## ⏱ First 30 Minutes on Every Box
+## First 30 Minutes on Every Box
 
 Do this **before** touching any configs — you need a baseline to compare against later.
 
@@ -43,7 +43,7 @@ Do this **before** touching any configs — you need a baseline to compare again
 
 ---
 
-## 🐧 General Linux Hardening
+##  General Linux Hardening
 *(`iron` – Ubuntu 18.04, `redstone` – Rocky 9.6)*
 
 ### SSH — `/etc/ssh/sshd_config`
@@ -84,7 +84,7 @@ Then: `systemctl restart sshd`
 
 ---
 
-## 🪟 General Windows Hardening
+## General Windows Hardening
 *(`lapis` – Windows Server 2016)*
 
 - **Local Administrators:** `net localgroup administrators` → remove anything that isn't `steve`/`alex`/required admins.
@@ -97,9 +97,9 @@ Then: `systemctl restart sshd`
 
 ---
 
-## 🎯 Service-Specific Hardening
+## Service-Specific Hardening
 
-### 🌐 HTTP/HTTPS
+### HTTP/HTTPS
 - Never swap the web server or fake a static responder to match the check — disqualifying.
 - Patch to a compatible minor version only if it won't break content/MD5 checks.
 - Remove default/sample pages, directory listing (`Options -Indexes` / `autoindex off`), and version banners (`ServerTokens Prod`, `server_tokens off`).
@@ -107,13 +107,13 @@ Then: `systemctl restart sshd`
 - If dynamic: parameterize queries (SQLi), trim `disable_functions` in `php.ini`.
 - Log everything; watch for sqlmap/nikto signatures, mass 404s, admin-panel probing.
 
-### 🔑 SSH
+### SSH
 - Config hardening — see [General Linux](#-general-linux-hardening) above.
 - `fail2ban` for brute force — **scope bans away from the scoring engine's IP** or use a generous threshold so you don't lock yourself out of points.
 - Monitor `/var/log/auth.log` (Ubuntu) / `/var/log/secure` (Rocky).
 - Audit every account's `~/.ssh/authorized_keys`.
 
-### 📁 FTP
+### FTP
 - Plaintext by nature — if switching to FTPS/SFTP breaks the scored check, harden the daemon instead:
   ```
   anonymous_enable=NO
@@ -123,7 +123,7 @@ Then: `systemctl restart sshd`
 - Restrict `write_enable` to only what's required; remove test/demo accounts.
 - Watch for **anonymous write access** — one of the most common CCDC FTP footholds.
 
-### 🗂️ AD/DNS
+### AD/DNS
 **Active Directory**
 - Audit Domain Admins / Enterprise Admins membership — red team loves adding itself here.
 - Forward auth events (4624/4625/4720/4728) to Splunk.
@@ -144,7 +144,7 @@ Then: `systemctl restart sshd`
 
 ---
 
-## 📊 Splunk / Logging (`redstone`)
+## Splunk / Logging (`redstone`)
 
 - No scored services here — this box is your detection hub, not something to lock down at the cost of visibility.
 - Confirm `iron`/`lapis` forwarders point only to the expected indexer(s); flag anything unexpected.
@@ -158,7 +158,7 @@ Then: `systemctl restart sshd`
 
 ---
 
-## 🕵️ Windows Event ID Reference (Security Log)
+## Windows Event ID Reference (Security Log)
 
 If you only enable one extra thing on `lapis`, enable **"Include command line in process creation events"** (via `gpedit.msc` → Computer Configuration → Administrative Templates → System → Audit Process Creation, or `secpol.msc`/GPO for Advanced Audit Policy). Native Event ID 4688 doesn't log command-line args by default — turning this on is the single highest-value IR setting on a stock Windows box. Sysmon (Event ID 1) gives you the same thing plus hashes and parent-process chains if you're able to deploy it.
 
@@ -212,7 +212,7 @@ A forged **Golden Ticket** often shows up as a TGS-granted session for a user wi
 
 ---
 
-## 🔥 VyOS Firewall/Gateway (`bedrock`)
+## VyOS Firewall/Gateway (`bedrock`)
 
 - 1:1 NAT means the firewall should forward **only** the specific ports each host needs — nothing extra.
 - Default-deny: explicit deny + log rules for anything not explicitly allowed.
@@ -222,7 +222,7 @@ A forged **Golden Ticket** often shows up as a TGS-granted session for a user wi
 
 ---
 
-## 💻 Command-Line Cheat Sheet
+## Command-Line Cheat Sheet
 
 **Linux — almost entirely CLI:**
 
@@ -255,7 +255,7 @@ A forged **Golden Ticket** often shows up as a TGS-granted session for a user wi
 
 > Script what you can (especially Linux) into a single per-box hardening script — if red team resets something or you redeploy, you want a one-command re-harden, not a checklist you re-click by hand.
 
-### 🔁 Linux → PowerShell Command Equivalents
+### Linux → PowerShell Command Equivalents
 
 **File & directory navigation**
 
@@ -295,7 +295,7 @@ A forged **Golden Ticket** often shows up as a TGS-granted session for a user wi
 | `ifconfig` / `ip` | ❌ | `Get-NetIPAddress` | Show network config |
 | `man` / `--help` | ✅ | `Get-Help` | Command documentation |
 
-### 👤 User & Group Management Quick Reference
+### User & Group Management Quick Reference
 
 **Local (Windows)**
 ```powershell
@@ -319,7 +319,7 @@ New-ADGroup -Name "Finance-Viewers" -GroupScope Global -GroupCategory Security
 net group /domain
 ```
 
-### 🔒 File Permissions / ACLs (Windows)
+### File Permissions / ACLs (Windows)
 
 Tightening NTFS permissions on shared folders is a common quick win — check for `Everyone`/`Authenticated Users` with `Modify` or `Full Control` on anything sensitive (web roots, shares, config folders):
 
@@ -340,7 +340,7 @@ Set-Acl "C:\SharedFolder" $Acl
 ```
 On Linux, the equivalent audit is `getfacl`/`setfacl` plus a straight `ls -la` pass over web roots, `/etc`, and any shared/upload directories for unexpected world-writable or world-readable files.
 
-### 🧭 Useful Windows Environment Variables
+### Useful Windows Environment Variables
 
 | Variable | Contents |
 |---|---|
@@ -351,7 +351,7 @@ On Linux, the equivalent audit is `getfacl`/`setfacl` plus a straight `ls -la` p
 
 ---
 
-## ✅ Operational Reminders
+## Operational Reminders
 
 - Any credential change to a **required scored account** → PCR on `scoring.byuccdc.org`. Silent changes just break your own scoring.
 - Never alter a service's expected behavior/content to game the check — grounds for disqualification.
